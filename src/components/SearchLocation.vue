@@ -1,57 +1,60 @@
 <template>
   <!-- A view showing current location and coordinates -->
-  <div class="flex flex-col w-[95vw] my-10">
-    <div class="w-full flex flex-col">
+  <div class="flex flex-col w-[95%]">
+    <div class="flex flex-col">
       <button
         @click="getCurrentPosition"
-        class="bg-blue-500 text-white rounded p-3 mb-5 self-center"
+        class="bg-blue-500 text-white rounded p-2 self-start w-auto"
       >
         Get Current Location
       </button>
-      <div class="flex flex-col bg-slate-200 rounded mb-4">
+      <div class="flex flex-col bg-slate-200 rounded w-full self-center m-3">
         <h6 class="va-h6 'bg-gray-200">Your current location:</h6>
-        <div class="bg-gray-300 h-14 flex items-center">
+        <div class="bg-gray-300 flex items-center h-24 rounded-b">
           <div v-if="loading">
             <va-progress-circle indeterminate :thickness="0.3" />
           </div>
-          <p v-else="loading">
-            {{ currentAddress }}
-          </p>
-        </div>
-        <h6 class="va-h6 bg-gray-200">Your current coordinates:</h6>
-        <div class="bg-gray-300 h-14 flex items-center rounded-b">
-          <div v-if="loading">
-            <va-progress-circle indeterminate :thickness="0.3" />
+          <div v-else>
+            <p class="m-1">{{ currentAddress }}</p>
+            <button
+              v-if="currentAddress"
+              class="bg-blue-500 text-white rounded p-2 m-1"
+              @click="
+                showOnMap(
+                  currentCoordinates.lat,
+                  currentCoordinates.lng,
+                  currentAddress
+                )
+              "
+            >
+              Search On Map
+            </button>
           </div>
-          <p v-else="loading">
-            {{ currentCoordinates }}
-          </p>
         </div>
       </div>
     </div>
+    <div
+      id="map"
+      class="w-full self-center h-[500px] bg-yellow-200 rounded"
+    ></div>
 
     <!-- search bar for searching location -->
-    <div class="flex flex-col items-center justify-center w-full my-2">
-      <div class="flex w-full">
-        <button
-          @click="searchLocation"
-          class="bg-green-500 text-white rounded p-3"
-        >
-          Search
-        </button>
-        <input
-          v-model="address"
-          @keyup.enter="searchLocation"
-          type="text"
-          class="ml-2 p-2 w-full rounded outline-none"
-          placeholder="Enter Address"
-        />
-      </div>
+    <div class="flex w-full self-center m-2">
+      <button
+        @click="searchLocation"
+        class="bg-green-500 text-white rounded p-3"
+      >
+        Search
+      </button>
+      <input
+        v-model="address"
+        @keyup.enter="searchLocation"
+        type="text"
+        class="p-3 w-full rounded ml-2"
+        placeholder="Enter a name of location"
+      />
     </div>
-
-    <!-- A map container -->
-    <div id="map" class="w-full h-[700px] bg-yellow-200 rounded"></div>
-    <TimeDisplay v-model:timeInfo="timeInfo" />
+    <TimeDisplay v-model:timeInfo="timeInfo" class="w-full self-center" />
     <LocationTable :searchedLocations="searchedLocations" />
   </div>
 </template>
@@ -73,6 +76,14 @@ const loading = ref(false);
 const timeInfo = ref({});
 
 let searchedLocations = ref([]);
+
+function addDummydata() {
+  searchedLocations.value.unshift({
+    marker: null,
+    address: "New York",
+    selected: false,
+  });
+}
 
 onMounted(() => {
   console.log("component mounted");
@@ -108,9 +119,21 @@ async function showOnMap(lat, lng, address) {
     address: address.toUpperCase(),
     selected: false,
   });
+
+  const coordinates = {
+    lat: lat,
+    lng: lng,
+  };
+  const info = await fetchTimeZoneInfo(coordinates);
+  timeInfo.value = info;
 }
 
 async function searchLocation() {
+  if (address.value === "") {
+    alert("Address cannot be empty!");
+    return;
+  }
+
   const { Geocoder } = await google.maps.importLibrary("geocoding");
   const geocoder = new Geocoder();
   geocoder.geocode(
@@ -122,13 +145,6 @@ async function searchLocation() {
           results[0].geometry.location.lng(),
           address.value
         );
-        const coordinates = {
-          lat: results[0].geometry.location.lat(),
-          lng: results[0].geometry.location.lng(),
-        };
-        const info = await fetchTimeZoneInfo(coordinates);
-        timeInfo.value = info;
-        console.log(info);
       } else {
         alert("Geocode was not successful for the following reason: " + status);
       }
@@ -155,7 +171,10 @@ async function getCurrentPosition() {
       .then((response) => {
         if (response.results[0]) {
           currentAddress.value = response.results[0].formatted_address;
-          currentCoordinates.value = `Lat: ${position.coords.latitude}, Lng: ${position.coords.longitude}`;
+          currentCoordinates.value = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
         } else {
           window.alert("No results found");
         }

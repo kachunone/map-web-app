@@ -2,9 +2,9 @@
   <div class="flex flex-col">
     <!-- Table Header -->
     <div class="flex bg-slate-400">
-      <div class="py-3 w-0 flex flex-col items-center justify-center">
+      <div class="w-0 flex flex-col items-center justify-center">
         <button
-          class="bg-red-700 text-white rounded p-2 px-4"
+          class="bg-red-700 text-white rounded p-1 m-1"
           @click="deleteBtnPressed"
         >
           Delete
@@ -15,34 +15,47 @@
       </div>
     </div>
     <!-- Table Body -->
-    <div
-      v-for="(item, index) in searchedLocations"
-      :key="index"
-      :class="
-        'bg-' +
-        (index % 2 === 0 ? 'gray-200' : 'gray-300') +
-        ' flex py-3' +
-        (index === 0 ? ' text-blue-500' : '')
-      "
-    >
-      <div class="flex items-center justify-center">
-        <va-checkbox class="bg-white w-0" v-model="item.selected" />
-      </div>
-      <div class="w-6/12 flex items-center justify-center">
-        <p class="">
-          {{ item.address }}
-        </p>
+    <div class="bg-slate-800">
+      <div
+        v-for="(item, index) in itemsInRange"
+        :key="index"
+        :class="
+          'bg-' + (index % 2 === 0 ? 'gray-200' : 'gray-300') + ' flex p-2 pl-0'
+        "
+      >
+        <div class="flex items-center justify-center">
+          <va-checkbox class="bg-white w-0" v-model="item.selected" />
+        </div>
+        <div class="w-6/12 flex items-center justify-center">
+          <p class="">
+            {{ item.address }}
+          </p>
+        </div>
       </div>
     </div>
-    <Pagination class="self-center mt-3"></Pagination>
+    <va-pagination
+      v-model="value"
+      class="self-center m-2"
+      :visible-pages="4"
+      :total="searchedLocations.length"
+      :page-size="itemPerPage"
+    />
   </div>
 </template>
 
 <script setup>
-import { defineProps, onMounted, ref } from "vue";
-import Pagination from "./Pagination.vue";
+import { defineProps, ref, computed } from "vue";
 
 const { searchedLocations } = defineProps(["searchedLocations"]);
+const value = ref(1);
+const itemPerPage = 10;
+
+const itemsInRange = computed(() => {
+  const startIdx = value.value - 1;
+  const endIdx = Math.min(searchedLocations.length, startIdx + itemPerPage);
+  // the new sliced array's elements has same references to searchedLocation's ones
+  return searchedLocations.slice(startIdx, endIdx);
+});
 
 function deleteBtnPressed() {
   for (let index = searchedLocations.length - 1; index >= 0; index--) {
