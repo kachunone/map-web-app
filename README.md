@@ -42,29 +42,20 @@ Before you begin, ensure you have met the following requirements:
 ## Installation
 
 1. Clone the repository:
-
-   ```bash
+   ```
    git clone https://github.com/yourusername/location-tracking-webpage.git
-
-2. Change to the project directory:
-
-   ```bash
+3. Change to the project directory:
+   ```
    cd map-web-app
-
-3. Install the project dependencies:
-
-   ```bash
+4. Install the project dependencies:
+   ```
    npm install
-
 ## Configuration
 
 1. Create a .env file in the project root directory.
 
-2. Add your Google Maps API keys to the created .env following format from .env.example file
+2. Add your Google Maps API keys to the created .env following format from .env.example file.
 
 3. Start the development server:
-   
-   ```bash
+   ```
    npm run dev
-   
-   
