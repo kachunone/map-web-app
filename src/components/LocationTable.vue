@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col my-4">
+  <div class="flex flex-col">
     <!-- Table Header -->
     <div class="flex bg-slate-400">
       <div class="py-3 w-0 flex flex-col items-center justify-center">
@@ -18,8 +18,12 @@
     <div
       v-for="(item, index) in searchedLocations"
       :key="index"
-      class="flex py-3"
-      :class="index % 2 === 0 ? 'bg-gray-200' : 'bg-gray-300'"
+      :class="
+        'bg-' +
+        (index % 2 === 0 ? 'gray-200' : 'gray-300') +
+        ' flex py-3' +
+        (index === 0 ? ' text-blue-500' : '')
+      "
     >
       <div class="flex items-center justify-center">
         <va-checkbox class="bg-white w-0" v-model="item.selected" />

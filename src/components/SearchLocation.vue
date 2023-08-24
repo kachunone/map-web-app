@@ -51,18 +51,7 @@
 
     <!-- A map container -->
     <div id="map" class="w-full h-[700px] bg-yellow-200 rounded"></div>
-
-    <!-- A view showing time zone and local time of latest searched location -->
-    <div class="flex flex-col bg-slate-200 rounded my-4">
-      <h6 class="va-h6 'bg-gray-200">Latest searched address TimeZone:</h6>
-      <div class="bg-gray-300 h-14 flex items-center">
-        {{ latestTimeZone }}
-      </div>
-      <h6 class="va-h6 bg-gray-200">Latest searched address LocalTime:</h6>
-      <div class="bg-gray-300 h-14 flex items-center rounded-b">
-        {{ latestLocalTime }}
-      </div>
-    </div>
+    <TimeDisplay v-model:timeInfo="timeInfo" />
     <LocationTable :searchedLocations="searchedLocations" />
   </div>
 </template>
@@ -71,6 +60,8 @@
 import { Loader } from "@googlemaps/js-api-loader";
 import { ref, onMounted } from "vue";
 import LocationTable from "./LocationTable.vue";
+import TimeDisplay from "./TimeDisplay.vue";
+import { fetchTimeZoneInfo } from "../helper.js";
 
 let map = null;
 const address = ref("");
@@ -78,9 +69,8 @@ const currentAddress = ref("");
 const currentCoordinates = ref("");
 const loading = ref(false);
 
-//DUMMY DATA
-const latestTimeZone = ref("Eastern Daylight Time");
-const latestLocalTime = ref("2023-08-23T14:30:00");
+//the var is binded to TimeDisplay component
+const timeInfo = ref({});
 
 let searchedLocations = ref([]);
 
@@ -113,7 +103,7 @@ async function showOnMap(lat, lng, address) {
     position: new google.maps.LatLng(lat, lng),
   });
 
-  searchedLocations.value.push({
+  searchedLocations.value.unshift({
     marker: marker,
     address: address.toUpperCase(),
     selected: false,
@@ -123,17 +113,27 @@ async function showOnMap(lat, lng, address) {
 async function searchLocation() {
   const { Geocoder } = await google.maps.importLibrary("geocoding");
   const geocoder = new Geocoder();
-  geocoder.geocode({ address: address.value }, function (results, status) {
-    if (status == "OK") {
-      showOnMap(
-        results[0].geometry.location.lat(),
-        results[0].geometry.location.lng(),
-        address.value
-      );
-    } else {
-      alert("Geocode was not successful for the following reason: " + status);
+  geocoder.geocode(
+    { address: address.value },
+    async function (results, status) {
+      if (status === "OK") {
+        showOnMap(
+          results[0].geometry.location.lat(),
+          results[0].geometry.location.lng(),
+          address.value
+        );
+        const coordinates = {
+          lat: results[0].geometry.location.lat(),
+          lng: results[0].geometry.location.lng(),
+        };
+        const info = await fetchTimeZoneInfo(coordinates);
+        timeInfo.value = info;
+        console.log(info);
+      } else {
+        alert("Geocode was not successful for the following reason: " + status);
+      }
     }
-  });
+  );
 }
 
 async function getCurrentPosition() {
