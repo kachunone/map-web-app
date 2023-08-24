@@ -43,7 +43,7 @@ Before you begin, ensure you have met the following requirements:
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/location-tracking-webpage.git
+   git clone https://github.com/kachunone/map-web-app.git
 3. Change to the project directory:
    ```
    cd map-web-app
