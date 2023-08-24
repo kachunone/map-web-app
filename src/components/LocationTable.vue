@@ -10,8 +10,8 @@
           Delete
         </button>
       </div>
-      <div class="w-6/12 text flex items-center text-lg">
-        Searched Locations
+      <div class="w-6/12 flex items-center text-lg">
+        Searched Locations - {{ searchedLocations.length }} places(s)
       </div>
     </div>
     <!-- Table Body -->

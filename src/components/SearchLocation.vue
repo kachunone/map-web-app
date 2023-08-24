@@ -10,25 +10,12 @@
       </button>
       <div class="flex flex-col bg-slate-200 rounded w-full self-center m-3">
         <h6 class="va-h6 'bg-gray-200">Your current location:</h6>
-        <div class="bg-gray-300 flex items-center h-24 rounded-b">
+        <div class="bg-gray-300 flex items-center h-12 rounded-b">
           <div v-if="loading">
             <va-progress-circle indeterminate :thickness="0.3" />
           </div>
           <div v-else>
             <p class="m-1">{{ currentAddress }}</p>
-            <button
-              v-if="currentAddress"
-              class="bg-blue-500 text-white rounded p-2 m-1"
-              @click="
-                showOnMap(
-                  currentCoordinates.lat,
-                  currentCoordinates.lng,
-                  currentAddress
-                )
-              "
-            >
-              Search On Map
-            </button>
           </div>
         </div>
       </div>
@@ -69,21 +56,9 @@ import { fetchTimeZoneInfo } from "../helper.js";
 let map = null;
 const address = ref("");
 const currentAddress = ref("");
-const currentCoordinates = ref("");
 const loading = ref(false);
-
-//the var is binded to TimeDisplay component
-const timeInfo = ref({});
-
 let searchedLocations = ref([]);
-
-function addDummydata() {
-  searchedLocations.value.unshift({
-    marker: null,
-    address: "New York",
-    selected: false,
-  });
-}
+const timeInfo = ref({}); //the var is binded to TimeDisplay component
 
 onMounted(() => {
   console.log("component mounted");
@@ -124,6 +99,10 @@ async function showOnMap(lat, lng, address) {
     lat: lat,
     lng: lng,
   };
+  timeInfo.value = {
+    timeZone: "Loading...",
+    localTime: "Loading...",
+  };
   const info = await fetchTimeZoneInfo(coordinates);
   timeInfo.value = info;
 }
@@ -159,27 +138,28 @@ async function getCurrentPosition() {
       navigator.geolocation.getCurrentPosition(resolve, reject);
     });
     loading.value = false;
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
+
     const { Geocoder } = await google.maps.importLibrary("geocoding");
     const geocoder = new Geocoder();
-    geocoder
-      .geocode({
-        location: new google.maps.LatLng(
-          position.coords.latitude,
-          position.coords.longitude
-        ),
-      })
-      .then((response) => {
-        if (response.results[0]) {
-          currentAddress.value = response.results[0].formatted_address;
-          currentCoordinates.value = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          };
-        } else {
-          window.alert("No results found");
-        }
-      })
-      .catch((e) => window.alert("Geocoder failed due to: " + e));
+
+    try {
+      const response = await geocoder.geocode({
+        location: new google.maps.LatLng(lat, lng),
+      });
+
+      if (!response.results[0]) {
+        window.alert("No results found");
+        return;
+      }
+
+      const fetchedAddress = response.results[0].formatted_address;
+      currentAddress.value = fetchedAddress;
+      showOnMap(lat, lng, fetchedAddress);
+    } catch (e) {
+      window.alert("Geocoder failed due to: " + e);
+    }
   } catch (error) {
     throw error;
   }
