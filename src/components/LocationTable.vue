@@ -11,7 +11,7 @@
         </button>
       </div>
       <div class="w-6/12 flex items-center text-lg">
-        Searched Locations - {{ searchedLocations.length }} places(s)
+        Searched Locations - {{ searchedLocations.length }} place(s)
       </div>
     </div>
     <!-- Table Body -->
